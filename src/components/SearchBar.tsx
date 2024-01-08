@@ -52,16 +52,14 @@ export default SearchBar;
 // styles
 const styles = StyleSheet.create({
   searchBar__clicked: {
-    position: 'absolute',
-    bottom: -15,
+    marginRight: 5,
     paddingHorizontal: 10,
     height: 50,
     flexDirection: 'row',
-    width: '90%',
+    width: '85%',
     backgroundColor: '#5D1000',
     borderRadius: 15,
     alignItems: 'center',
-    alignSelf: 'center',
   },
   input: {
     fontSize: 20,

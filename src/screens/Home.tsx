@@ -25,8 +25,7 @@ import {
 
 import AntDesign from 'react-native-vector-icons/dist/AntDesign';
 import useDebounce from '../utils/useDebounce';
-
-
+import {MovieItem} from '../types';
 interface HomeProps {
   navigation: any; // Declaring navigation prop as any
 }
@@ -56,53 +55,51 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
   const {data: trendingData} = fetchTrendingQuery;
   const {data: searchData} = searchQuery;
 
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [{scale: scale.value}],
-  //   };
-  // });
-  const renderItem = ({item}) => {
-    // Determine the image URL
-    // The Movie Database typically uses a base URL for image paths, which you will need to prepend to the poster_path from the data.
-    // Assuming the base URL is "https://image.tmdb.org/t/p/w500" for a width of 500 pixels.
+  const renderItem = ({item}: {item: MovieItem}) => {
     const imageUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
 
     return (
       <Pressable
         style={{padding: 10}}
-        onPress={async () => {
-          // Since you're using async/await, ensure that the getMovieDetails function is properly defined to handle the API call.
-          try {
-            const data = await getMovieDetails(item.id, item.media_type);
-            console.log('navigate data====>', data);
-            Object.keys(data).length > 0 &&
-              navigation.navigate('Details', {
-                movieDetails: data,
-                mediaType: item.media_type,
-              });
-          } catch (error) {
-            console.error('Error fetching details:', error);
-          }
+        onPress={() => {
+          navigation.navigate('Details', {
+            movieId: item.id,
+            mediaType: item.media_type,
+            sideImage: imageUrl,
+          });
         }}>
-        <ImageBackground
+        <Animated.Image
           source={{uri: imageUrl}}
-          style={{width: 150, height: 225}} // Adjust the height accordingly to maintain the aspect ratio.
-        >
-          <TouchableOpacity
-            style={{alignSelf: 'flex-end', marginRight: 5, marginTop: 5}}>
-            <AntDesign
-              name="heart"
-              size={25}
-              color="white"
-              //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
-            />
-          </TouchableOpacity>
-        </ImageBackground>
-        <Text style={{color: 'white'}}>{item.title || item.name}</Text>
-        <Text style={{color: 'white'}}>
-          Release Date: {item.release_date || item.first_air_date}
-        </Text>
-        <Text style={{color: 'white'}}>Average Vote: {item.vote_average}</Text>
+          style={{width: 150, height: 225}}
+          sharedTransitionTag={`movie-${item.id}`}
+        />
+        <TouchableOpacity
+          style={{
+            alignSelf: 'flex-end',
+            right: 15,
+            top: 15,
+            position: 'absolute',
+          }}>
+          <AntDesign
+            name="heart"
+            size={25}
+            color="white"
+            //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
+          />
+        </TouchableOpacity>
+        <View
+          style={{
+            backgroundColor: '#2D0E08',
+            width: 150,
+            borderBottomLeftRadius: 5,
+            borderBottomRightRadius: 5,
+            paddingHorizontal: 2,
+          }}>
+          <Text style={{color: 'white'}}>{item.title || item.name}</Text>
+          <Text style={{color: 'white'}}>
+           {item.release_date || item.first_air_date}
+          </Text>
+        </View>
       </Pressable>
     );
   };
@@ -116,31 +113,21 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
         clicked={clicked}
         setClicked={setClicked}
       />
-  {console.log("Search Data======>",searchData)}
-      <View style={{marginTop: 120, width: '100%'}}>
-        {/* {trendingData && (
-        <Text style={styles.seriesInfo}>{trendingData?.title}</Text> // Display some data from the series
-      )} */}
+
+      <View style={{marginTop: 75, width: '100%'}}>
         <FlatList
-          data={trendingData ? trendingData.results : []}
+          data={
+            // Check if searchData has results and use it if available, otherwise fallback to trendingData
+            searchData && searchData.results.length > 0
+              ? searchData.results
+              : trendingData
+              ? trendingData.results
+              : []
+          }
           keyExtractor={item => item.id.toString()}
           renderItem={renderItem}
+          numColumns={2}
         />
-        {/* <Pressable
-          style={[styles.button, pressed ? styles.buttonPressed : null]}
-          onPress={() => navigation.navigate('Details')}
-          onPressIn={() => {
-            setPressed(true);
-            scale.value = withSpring(1.1);
-          }}
-          onPressOut={() => {
-            setPressed(false);
-            scale.value = withSpring(1);
-          }}>
-          <Animated.View style={[animatedStyle]}>
-            <Text style={styles.buttonText}>Details</Text>
-          </Animated.View>
-        </Pressable> */}
       </View>
     </View>
   );

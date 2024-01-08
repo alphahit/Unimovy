@@ -3,10 +3,7 @@ import React, {useState} from 'react';
 import {View, TouchableOpacity, Text, StyleSheet} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import SearchBar from './SearchBar';
-
-interface HeaderProps {
-  navigation: any;
-}
+import {HeaderProps} from '../types';
 
 const Header: React.FC<HeaderProps> = ({
   navigation,
@@ -29,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginTop:'5%'
+          marginTop: '5%',
         }}>
         <TouchableOpacity onPress={toggleDrawer} style={{marginLeft: 10}}>
           <MaterialCommunityIcons
@@ -39,16 +36,13 @@ const Header: React.FC<HeaderProps> = ({
             //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
           />
         </TouchableOpacity>
-        <Text style={  styles.headerText }>Home</Text>
-        <View style={{width: 30}} />
+        <SearchBar
+          searchPhrase={searchPhrase}
+          setSearchPhrase={setSearchPhrase}
+          clicked={clicked}
+          setClicked={setClicked}
+        />
       </View>
-
-      <SearchBar
-        searchPhrase={searchPhrase}
-        setSearchPhrase={setSearchPhrase}
-        clicked={clicked}
-        setClicked={setClicked}
-      />
     </View>
   );
 };
@@ -61,11 +55,10 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 100,
-    backgroundColor: '#1e90ff',
+    height: 75,
     borderBottomEndRadius: 15,
     borderBottomStartRadius: 15,
-   
+    backgroundColor: 'rgba(52, 52, 52, 0.5)'
   },
   headerText: {
     color: 'white',
