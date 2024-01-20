@@ -1,39 +1,66 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
-import {View, Text, Pressable, StyleSheet, FlatList, Image} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Image,
+  ImageBackground,
+  Pressable,
+} from 'react-native';
+import {useQuery} from '@tanstack/react-query';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  //withSpring,
 } from 'react-native-reanimated';
 import Header from '../components/Header';
-import {fetchTrendingData} from '../api/axiosInstance';
+import {
+  fetchTrendingData,
+  getMovieDetails,
+  getSearchResults,
+} from '../api/axiosInstance';
+
+import AntDesign from 'react-native-vector-icons/dist/AntDesign';
+import useDebounce from '../utils/useDebounce';
+
+
 interface HomeProps {
   navigation: any; // Declaring navigation prop as any
 }
 
 const Home: React.FC<HomeProps> = ({navigation}) => {
-  const [pressed, setPressed] = useState(false);
-  const [trendingData, setTrendingData] = useState(null);
-  const scale = useSharedValue(1);
-  useEffect(() => {
-    const fetchTrending = async () => {
-      try {
-        const data = await fetchTrendingData();
-        console.log('fetchTrendingData=======>', JSON.stringify(data));
-        setTrendingData(data);
-      } catch (error) {
-        console.error('Error fetching series data:', error);
-      }
-    };
-
-    fetchTrending();
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{scale: scale.value}],
-    };
+  //const [pressed, setPressed] = useState(false);
+  //const [trendingData, setTrendingData] = useState(null);
+  const [page, setPage] = useState(1);
+  //const scale = useSharedValue(1);
+  const [searchPhrase, setSearchPhrase] = useState('');
+  const [clicked, setClicked] = useState(false);
+  const debouncedSearchPhrase = useDebounce(searchPhrase, 500);
+  const fetchTrendingQuery = useQuery({
+    queryKey: ['trending', page],
+    queryFn: () => fetchTrendingData(page),
   });
+
+  // const searchQuery = useQuery({
+  //   queryKey: ['search', searchPhrase],
+  //   queryFn: () => getSearchResults(searchPhrase),
+  // });
+  const searchQuery = useQuery({
+    queryKey: ['search', debouncedSearchPhrase],
+    queryFn: () => getSearchResults(debouncedSearchPhrase),
+    enabled: debouncedSearchPhrase.length > 0, // Only run query if search phrase is not empty
+  });
+  const {data: trendingData} = fetchTrendingQuery;
+  const {data: searchData} = searchQuery;
+
+  // const animatedStyle = useAnimatedStyle(() => {
+  //   return {
+  //     transform: [{scale: scale.value}],
+  //   };
+  // });
   const renderItem = ({item}) => {
     // Determine the image URL
     // The Movie Database typically uses a base URL for image paths, which you will need to prepend to the poster_path from the data.
@@ -41,24 +68,56 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
     const imageUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
 
     return (
-      <View style={{padding: 10}}>
-        <Image
+      <Pressable
+        style={{padding: 10}}
+        onPress={async () => {
+          // Since you're using async/await, ensure that the getMovieDetails function is properly defined to handle the API call.
+          try {
+            const data = await getMovieDetails(item.id, item.media_type);
+            console.log('navigate data====>', data);
+            Object.keys(data).length > 0 &&
+              navigation.navigate('Details', {
+                movieDetails: data,
+                mediaType: item.media_type,
+              });
+          } catch (error) {
+            console.error('Error fetching details:', error);
+          }
+        }}>
+        <ImageBackground
           source={{uri: imageUrl}}
           style={{width: 150, height: 225}} // Adjust the height accordingly to maintain the aspect ratio.
-        />
+        >
+          <TouchableOpacity
+            style={{alignSelf: 'flex-end', marginRight: 5, marginTop: 5}}>
+            <AntDesign
+              name="heart"
+              size={25}
+              color="white"
+              //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
+            />
+          </TouchableOpacity>
+        </ImageBackground>
         <Text style={{color: 'white'}}>{item.title || item.name}</Text>
         <Text style={{color: 'white'}}>
           Release Date: {item.release_date || item.first_air_date}
         </Text>
         <Text style={{color: 'white'}}>Average Vote: {item.vote_average}</Text>
-      </View>
+      </Pressable>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Header navigation={navigation} />
-      <View style={{marginTop:60}}>
+      <Header
+        navigation={navigation}
+        searchPhrase={searchPhrase}
+        setSearchPhrase={setSearchPhrase}
+        clicked={clicked}
+        setClicked={setClicked}
+      />
+  {console.log("Search Data======>",searchData)}
+      <View style={{marginTop: 120, width: '100%'}}>
         {/* {trendingData && (
         <Text style={styles.seriesInfo}>{trendingData?.title}</Text> // Display some data from the series
       )} */}
@@ -67,7 +126,7 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
           keyExtractor={item => item.id.toString()}
           renderItem={renderItem}
         />
-        <Pressable
+        {/* <Pressable
           style={[styles.button, pressed ? styles.buttonPressed : null]}
           onPress={() => navigation.navigate('Details')}
           onPressIn={() => {
@@ -81,7 +140,7 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
           <Animated.View style={[animatedStyle]}>
             <Text style={styles.buttonText}>Details</Text>
           </Animated.View>
-        </Pressable>
+        </Pressable> */}
       </View>
     </View>
   );
