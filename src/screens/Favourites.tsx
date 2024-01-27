@@ -1,88 +1,88 @@
-/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import {
   View,
   Text,
-  ImageBackground,
+  FlatList,
+  Image,
   TouchableOpacity,
-  Alert,
+  StyleSheet,
 } from 'react-native';
+import {useMMKVObject} from 'react-native-mmkv';
+import Header from '../components/Header';
 
-// import { Container } from './styles';
+// Assuming your MovieItem type matches the structure of your favorites data
+type MovieItem = {
+  id: number;
+  title: string;
+  poster_path: string;
+  name: string;
+};
 
-const Favourites: React.FC = () => {
-  return (
-    <View style={{backgroundColor: 'pink', flex: 1}}>
-      <Text>Favourites</Text>
-      <ImageBackground
-        source={require('../assets/bar.png')}
-        resizeMode="cover"
-        style={{position: 'absolute', width: '100%', height: 60, bottom: 0}}>
-        <ImageBackground
-          source={require('../assets/check.png')}
-          resizeMode="cover"
-          style={{
-            position: 'absolute',
-            width: 90,
-            height: 90,
-            bottom: 10,
-            left: '38%',
-          }}>
-          <TouchableOpacity
-            onPress={() => {
-              Alert.alert('Sabya Choda');
-            }}
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: 30,
-            }}>
-            <Text>Banda Sabya</Text>
-          </TouchableOpacity>
-        </ImageBackground>
-      </ImageBackground>
-      {/* <View
-        style={{
-          position: 'absolute',
-          width: '100%',
-          backgroundColor: 'black',
-          height: 50,
-          bottom: 0,
-          opacity:0
+  
+  const Favourites: React.FC = ({navigation}) => {
+  const [favorites, setFavorites] = useMMKVObject<MovieItem[]>('favorites');
+  const deleteFavorites = item => {
+    let updatedFavorites = Array.isArray(favorites) ? [...favorites] : [];
+    const index = updatedFavorites.findIndex(fav => fav.id === item.id);
+    if (index !== -1) {
+      console.log('first ======>', index);
+      updatedFavorites.splice(index, 1);
+    }
+    setFavorites(updatedFavorites);
+  };
+  const renderItem = ({item}: {item: MovieItem}) => {
+    const imageUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+
+    return (
+      <TouchableOpacity
+        style={styles.itemContainer}
+        onPress={() => {
+          deleteFavorites(item);
         }}>
-        <View
-          style={{
-            borderRadius: 5000,
-            height: 50,
-            width: 50,
-            backgroundColor: 'yellow',
-            marginLeft: '32.5%',
-            borderWidth: 10,
-            borderColor: 'rgba(158, 150, 150, .5)',
-            position: 'absolute',
-            bottom: 25,
-          }}
+        {/* {console.log(item)} */}
+        <Image source={{uri: imageUrl}} style={styles.image} />
+        <Text style={styles.title}>{item.title ? item.title : item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Header isFavoritePage={true} navigation={navigation}/>
+      <View style={{marginTop: 75}}>
+        <FlatList
+          data={favorites}
+          keyExtractor={item => item.id.toString()}
+          renderItem={renderItem}
         />
-    
-      </View> */}
+      </View>
     </View>
   );
 };
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   image: {
-//     flex: 1,
-//     justifyContent: 'center',
-//   },
-//   text: {
-//     color: 'white',
-//     fontSize: 42,
-//     lineHeight: 84,
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     backgroundColor: '#000000c0',
-//   },
-// });
+
 export default Favourites;
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'black',
+    flex: 1,
+  },
+  itemContainer: {
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'black',
+  },
+  image: {
+    width: 50,
+    height: 75,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  title: {
+    color: 'white',
+    fontSize: 16,
+  },
+  // ... Add more styles as needed
+});

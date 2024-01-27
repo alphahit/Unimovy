@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -23,13 +23,15 @@ import {
   getSearchResults,
 } from '../api/axiosInstance';
 
+import {useMMKVBoolean, useMMKVObject} from 'react-native-mmkv';
 import AntDesign from 'react-native-vector-icons/dist/AntDesign';
 import useDebounce from '../utils/useDebounce';
 import {MovieItem} from '../types';
 interface HomeProps {
   navigation: any; // Declaring navigation prop as any
 }
-
+type FavoriteType = number[];
+const ITEM_HEIGHT = 225;
 const Home: React.FC<HomeProps> = ({navigation}) => {
   //const [pressed, setPressed] = useState(false);
   //const [trendingData, setTrendingData] = useState(null);
@@ -42,6 +44,30 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
     queryKey: ['trending', page],
     queryFn: () => fetchTrendingData(page),
   });
+  const getItemLayout = (data, index) => (
+    { length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index }
+  );
+  const flatListRef = useRef(null);
+ 
+  //const [isFavourite, setIsFavourite] = useMMKVBoolean(`Test id`);
+  const [favorites, setFavorites] = useMMKVObject<FavoriteType>('favorites');
+
+  const toggleFavourite = item => {
+    let updatedFavorites = Array.isArray(favorites) ? [...favorites] : [];
+
+    // Check if the movie is already in favorites
+    const index = updatedFavorites.findIndex(fav => fav.id === item.id);
+
+    if (index !== -1) {
+      // Movie is in favorites, remove it
+      updatedFavorites.splice(index, 1);
+    } else {
+      // Movie is not in favorites, add it
+      updatedFavorites.push(item);
+    }
+
+    setFavorites(updatedFavorites);
+  };
 
   // const searchQuery = useQuery({
   //   queryKey: ['search', searchPhrase],
@@ -54,10 +80,15 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
   });
   const {data: trendingData} = fetchTrendingQuery;
   const {data: searchData} = searchQuery;
-
+  useEffect(() => {
+    // Check if there are items and the ref is attached to the FlatList
+    if (flatListRef.current && trendingData?.results.length > 0) {
+      flatListRef.current.scrollToIndex({animated: true, index: 0});
+    }
+  }, [page, trendingData]);
   const renderItem = ({item}: {item: MovieItem}) => {
     const imageUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
-
+    const isFavorite = favorites?.some(favItem => favItem.id === item.id);
     return (
       <Pressable
         style={{padding: 10}}
@@ -79,11 +110,14 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
             right: 15,
             top: 15,
             position: 'absolute',
+          }}
+          onPress={() => {
+            toggleFavourite(item);
           }}>
           <AntDesign
             name="heart"
             size={25}
-            color="white"
+            color={isFavorite ? 'red' : 'white'}
             //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
           />
         </TouchableOpacity>
@@ -97,7 +131,7 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
           }}>
           <Text style={{color: 'white'}}>{item.title || item.name}</Text>
           <Text style={{color: 'white'}}>
-           {item.release_date || item.first_air_date}
+            {item.release_date || item.first_air_date}
           </Text>
         </View>
       </Pressable>
@@ -115,7 +149,10 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
       />
 
       <View style={{marginTop: 75, width: '100%'}}>
+        {/* {console.log("trendingData===>",trendingData?.total_pages)} */}
         <FlatList
+          ref={flatListRef}
+          getItemLayout={getItemLayout}
           data={
             // Check if searchData has results and use it if available, otherwise fallback to trendingData
             searchData && searchData.results.length > 0
@@ -128,6 +165,43 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
           renderItem={renderItem}
           numColumns={2}
         />
+      </View>
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          alignItems: 'center',
+          flexDirection: 'row',
+        }}>
+        <TouchableOpacity
+          onPress={() => {
+            if (page > 1) {
+              setPage(page - 1);
+            }
+          }}
+          disabled={page === 1}>
+          <AntDesign
+            name="leftcircle"
+            size={50}
+            color="black"
+            //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{marginLeft: 5}}
+          disabled={page === trendingData?.total_pages}
+          onPress={() => {
+            if (page < trendingData?.total_pages) {
+              setPage(page + 1);
+            }
+          }}>
+          <AntDesign
+            name="rightcircle"
+            size={50}
+            color="black"
+            //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );

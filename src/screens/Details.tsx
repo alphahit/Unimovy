@@ -18,9 +18,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import {getMovieDetails} from '../api/axiosInstance';
 import {useQuery} from '@tanstack/react-query';
 const DetailsScreen = ({route}) => {
-  // Helper function to render creators
   const {movieId, mediaType, sideImage} = route.params;
-
+ 
   const fetchMovieDetails = useQuery({
     queryKey: ['details', movieId],
     queryFn: () => getMovieDetails(movieId, mediaType),

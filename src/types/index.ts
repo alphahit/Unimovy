@@ -16,4 +16,6 @@ export interface HeaderProps {
   setSearchPhrase: React.Dispatch<React.SetStateAction<string>>;
   clicked: boolean;
   setClicked: React.Dispatch<React.SetStateAction<boolean>>;
+  isFavoritePage: boolean;
 }
+

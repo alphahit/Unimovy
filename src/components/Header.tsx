@@ -11,6 +11,7 @@ const Header: React.FC<HeaderProps> = ({
   searchPhrase,
   setSearchPhrase,
   setClicked,
+  isFavoritePage,
 }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -36,12 +37,31 @@ const Header: React.FC<HeaderProps> = ({
             //style={{transform: [{rotate: isDrawerOpen ? '180deg' : '0deg'}]}}
           />
         </TouchableOpacity>
-        <SearchBar
-          searchPhrase={searchPhrase}
-          setSearchPhrase={setSearchPhrase}
-          clicked={clicked}
-          setClicked={setClicked}
-        />
+        {isFavoritePage ? (
+          <View
+            style={{
+              justifyContent: 'center',
+              //backgroundColor: 'yellow',
+              width: '100%',
+            }}>
+            <Text
+              style={{
+                color: 'white',
+                marginLeft: 15,
+                fontSize: 20,
+                fontWeight: 'bold',
+              }}>
+              Favourite
+            </Text>
+          </View>
+        ) : (
+          <SearchBar
+            searchPhrase={searchPhrase}
+            setSearchPhrase={setSearchPhrase}
+            clicked={clicked}
+            setClicked={setClicked}
+          />
+        )}
       </View>
     </View>
   );
@@ -58,7 +78,7 @@ const styles = StyleSheet.create({
     height: 75,
     borderBottomEndRadius: 15,
     borderBottomStartRadius: 15,
-    backgroundColor: 'rgba(52, 52, 52, 0.5)'
+    backgroundColor: 'rgba(52, 52, 52, 0.5)',
   },
   headerText: {
     color: 'white',
