@@ -80,6 +80,8 @@ const Home: React.FC<HomeProps> = ({navigation}) => {
   });
   const {data: trendingData} = fetchTrendingQuery;
   const {data: searchData} = searchQuery;
+  console.log('trendingData===>',trendingData)
+  console.log('trendingData===>',searchData)
   useEffect(() => {
     // Check if there are items and the ref is attached to the FlatList
     if (flatListRef.current && trendingData?.results.length > 0) {

@@ -1,5 +1,29 @@
 import axios from 'axios';
 import config from './config';
+console.log('config===>', config);
+
+export const fetchImdbData = async movieId => {
+  // console.log("movieId===>",movieId)
+  // console.log("config.IMDB_KEY=====>",config.IMDBAPI_KEY)
+  const options = {
+    method: 'GET',
+    url: 'https://imdb146.p.rapidapi.com/v1/title/',
+    params: {id: movieId},
+    headers: {
+      'X-RapidAPI-Key': config.IMDBAPI_KEY,
+      'X-RapidAPI-Host': 'imdb146.p.rapidapi.com',
+    },
+  };
+
+  try {
+    //console.log("tEst ===>")
+    const response = await axios.request(options);
+    //console.log('response=======>', JSON.stringify(response));
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 export const fetchTrendingData = async (page = 1) => {
   try {
@@ -21,7 +45,7 @@ export const fetchTrendingData = async (page = 1) => {
 };
 
 export const getSearchResults = async query => {
-console.log("getSearchResults====>",query)
+  console.log('getSearchResults====>', query);
   try {
     const response = await axios.get(
       'https://api.themoviedb.org/3/search/multi',
